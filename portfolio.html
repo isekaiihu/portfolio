@@ -1,0 +1,784 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ISekai | Developer Portfolio</title>
+  <style>
+    :root {
+      --bg: #09060a;
+      --bg-2: #12070f;
+      --card: rgba(25, 13, 19, 0.62);
+      --card-strong: rgba(35, 16, 24, 0.82);
+      --text: #f8eeee;
+      --muted: #d4bcbc;
+      --red: #ff2a2a;
+      --red-soft: #ff4d4d;
+      --rose: #ff6b6b;
+      --line: rgba(255, 80, 80, 0.28);
+      --shadow: 0 24px 60px rgba(255, 30, 30, 0.2);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+    html { font-size: 17px; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      color: var(--text);
+      background: radial-gradient(circle at 20% -10%, #261019 0%, var(--bg) 40%, #050306 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    #bgCanvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -3;
+    }
+
+    .bg-glow {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(255, 40, 40, 0.15), transparent 28%),
+        radial-gradient(circle at 10% 80%, rgba(255, 24, 24, 0.14), transparent 30%),
+        radial-gradient(circle at 85% 10%, rgba(255, 48, 48, 0.1), transparent 25%);
+      filter: blur(4px);
+    }
+
+    .wrap {
+      width: min(1180px, 94vw);
+      margin: 24px auto 80px;
+      position: relative;
+    }
+
+    .top-nav {
+      position: sticky;
+      top: 16px;
+      z-index: 10;
+      display: flex;
+      justify-content: center;
+      margin-bottom: 18px;
+    }
+
+    .pill {
+      display: flex;
+      gap: 8px;
+      padding: 8px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: linear-gradient(135deg, rgba(40, 16, 24, 0.7), rgba(20, 8, 14, 0.7));
+      backdrop-filter: blur(14px);
+      box-shadow: var(--shadow);
+    }
+
+    .pill button {
+      color: var(--muted);
+      border: 0;
+      cursor: pointer;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.83rem;
+      transition: 0.25s ease;
+      background: transparent;
+    }
+
+    .pill button:hover, .pill button.active {
+      color: #fff;
+      background: linear-gradient(120deg, rgba(255, 42, 42, 0.4), rgba(180, 20, 20, 0.3));
+      box-shadow: 0 10px 30px rgba(255, 40, 40, 0.2) inset;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 2.1fr 1fr;
+      gap: 16px;
+    }
+
+    .card {
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      background: linear-gradient(145deg, var(--card-strong), var(--card));
+      backdrop-filter: blur(16px);
+      box-shadow: var(--shadow);
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      transform: translateY(20px);
+      opacity: 0;
+      transition: 0.55s ease;
+    }
+
+    .card.show { transform: translateY(0); opacity: 1; }
+
+    .hero::before, .card::after {
+      content: "";
+      position: absolute;
+      width: 260px;
+      height: 260px;
+      background: radial-gradient(circle, rgba(255, 56, 56, 0.26), transparent 70%);
+      right: -90px;
+      top: -120px;
+      pointer-events: none;
+    }
+
+    .mini-kicker {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      color: var(--red-soft);
+      margin-bottom: 14px;
+      text-transform: uppercase;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.1rem, 5vw, 3.5rem);
+      margin: 0 0 8px;
+      line-height: 1.02;
+      text-shadow: 0 0 24px rgba(255, 74, 117, 0.28);
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+      max-width: 70ch;
+      line-height: 1.7;
+    }
+
+    .hero-flex {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    .avatar {
+      width: 100px;
+      height: 100px;
+      border-radius: 20px;
+      border: 2px solid rgba(255, 90, 90, 0.45);
+      object-fit: cover;
+      background:
+        linear-gradient(120deg, rgba(255, 68, 68, 0.3), rgba(220, 24, 24, 0.4)),
+        #1a0b14;
+      flex-shrink: 0;
+      box-shadow: 0 0 0 3px rgba(255, 50, 50, 0.15), 0 20px 35px rgba(255, 53, 53, 0.24);
+    }
+
+    .hero-actions {
+      margin-top: 18px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      text-decoration: none;
+      border: 1px solid var(--line);
+      color: #fff;
+      padding: 11px 16px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 0.84rem;
+      transition: 0.24s ease;
+      background: rgba(255, 72, 72, 0.09);
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 16px 30px rgba(255, 53, 53, 0.26);
+      background: linear-gradient(120deg, rgba(255, 53, 53, 0.38), rgba(194, 30, 30, 0.26));
+    }
+
+    .info h3 {
+      margin: 0 0 16px;
+      color: #ffd9e8;
+      font-size: 1.2rem;
+    }
+    .key { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em; }
+    .value { margin: 6px 0 18px; font-weight: 800; font-size: 1.2rem; }
+    .info-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .info-row .key { margin: 0; }
+    .info-row .value { margin: 0; font-size: 1rem; text-align: right; }
+    .online {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #ffccd9;
+      font-weight: 800;
+    }
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 99px;
+      background: #52ff94;
+      box-shadow: 0 0 12px #52ff94;
+      animation: pulse 1.3s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.5); opacity: 0.5; }
+    }
+
+    section { margin-top: 16px; }
+
+    .two-col, .projects, .faq-grid {
+      display: grid;
+      gap: 16px;
+    }
+    .two-col { grid-template-columns: 1fr 1fr; }
+    .projects { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .faq-grid { grid-template-columns: 1fr 1fr; }
+
+    h2 {
+      margin: 0 0 10px;
+      font-size: 1.2rem;
+    }
+    .list p {
+      margin: 0 0 10px;
+      color: #f5dbe4;
+      line-height: 1.7;
+    }
+    .label {
+      color: var(--rose);
+      font-size: 0.75rem;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      font-weight: 800;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .chip-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .chip {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #ffd3e0;
+      background: rgba(255, 70, 120, 0.09);
+    }
+
+    .proj-card {
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+    .proj-card strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 1rem;
+      color: #ffe6ef;
+    }
+    .proj-card p {
+      margin: 0 0 10px;
+      color: #f6c8d8;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+    .proj-link {
+      color: var(--red-soft);
+      font-weight: 700;
+      font-size: 0.84rem;
+    }
+
+    .achieve-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .achievements-title {
+      text-align: center;
+      font-size: clamp(2.3rem, 6.6vw, 4.4rem);
+      margin: 8px 0 16px;
+      letter-spacing: 0.04em;
+      font-weight: 900;
+      color: #ffe178;
+      text-shadow: 0 0 26px rgba(255, 225, 120, 0.28);
+    }
+    .achievement-card {
+      padding: 28px;
+      border-color: rgba(255, 208, 71, 0.38);
+      background: linear-gradient(145deg, rgba(62, 33, 8, 0.74), rgba(30, 14, 8, 0.88));
+    }
+    .achievement-card .achieve-head { gap: 16px; margin-bottom: 18px; }
+    .achievement-card .star-icon {
+      width: 74px;
+      height: 74px;
+      border-radius: 18px;
+      border-color: rgba(255, 208, 71, 0.45);
+      box-shadow: 0 10px 28px rgba(255, 208, 71, 0.2);
+    }
+    .achievement-card h2 {
+      font-size: clamp(1.45rem, 2.4vw, 2.05rem);
+      margin: 0;
+    }
+    .achievement-card .stats { gap: 12px; }
+    .achievement-card .stat {
+      padding: 15px;
+      border-color: rgba(255, 208, 71, 0.4);
+      background: rgba(255, 208, 71, 0.09);
+      font-size: 0.98rem;
+    }
+    .star-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      object-fit: cover;
+      border: 1px solid var(--line);
+      background: linear-gradient(120deg, rgba(255,70,116,0.35), rgba(255,40,90,0.22));
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .stat {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      background: rgba(255, 70, 120, 0.09);
+      font-weight: 800;
+      color: #ffdce8;
+      text-align: center;
+    }
+
+    .role-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .role-columns ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .roles-block { margin-bottom: 16px; }
+    .roles-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .role-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border: 1px solid rgba(255, 96, 96, 0.22);
+      background: rgba(255, 80, 80, 0.07);
+      border-radius: 14px;
+      padding: 12px;
+    }
+    .role-badge {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      color: #fff;
+      font-size: 1.2rem;
+      background: linear-gradient(145deg, #ff3434, #b91515);
+      box-shadow: 0 8px 22px rgba(255, 47, 47, 0.35);
+      flex-shrink: 0;
+    }
+    .roles-grid .role-item:nth-child(8n + 1) .role-badge {
+      background: linear-gradient(145deg, #1ecad3, #199da4);
+      box-shadow: 0 8px 22px rgba(30, 202, 211, 0.35);
+    }
+    .roles-grid .role-item:nth-child(8n + 2) .role-badge {
+      background: linear-gradient(145deg, #ff9f1a, #de6f00);
+      box-shadow: 0 8px 22px rgba(255, 159, 26, 0.35);
+    }
+    .roles-grid .role-item:nth-child(8n + 3) .role-badge {
+      background: linear-gradient(145deg, #ff5c7a, #db2d57);
+      box-shadow: 0 8px 22px rgba(255, 92, 122, 0.35);
+    }
+    .roles-grid .role-item:nth-child(8n + 4) .role-badge {
+      background: linear-gradient(145deg, #53d86a, #2ca946);
+      box-shadow: 0 8px 22px rgba(83, 216, 106, 0.35);
+    }
+    .roles-grid .role-item:nth-child(8n + 5) .role-badge {
+      background: linear-gradient(145deg, #b16dff, #7c3bd8);
+      box-shadow: 0 8px 22px rgba(177, 109, 255, 0.35);
+    }
+    .roles-grid .role-item:nth-child(8n + 6) .role-badge {
+      background: linear-gradient(145deg, #7db5ff, #4e89d7);
+      box-shadow: 0 8px 22px rgba(125, 181, 255, 0.35);
+    }
+    .roles-grid .role-item:nth-child(8n + 7) .role-badge {
+      background: linear-gradient(145deg, #ffd047, #d6a318);
+      box-shadow: 0 8px 22px rgba(255, 208, 71, 0.35);
+    }
+    .roles-grid .role-item:nth-child(8n + 8) .role-badge {
+      background: linear-gradient(145deg, #ff7adf, #c546a5);
+      box-shadow: 0 8px 22px rgba(255, 122, 223, 0.35);
+    }
+    .role-main { font-weight: 800; color: #ffe5e5; line-height: 1.2; }
+    .role-sub {
+      color: #e7b9b9;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      font-size: 0.74rem;
+      margin-top: 4px;
+      font-weight: 800;
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    .contact {
+      text-align: center;
+      padding: 44px 24px;
+    }
+    .contact h2 {
+      font-size: clamp(1.8rem, 4.2vw, 2.8rem);
+      margin-bottom: 12px;
+    }
+
+    .socials {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 15px;
+    }
+
+    .fade-line {
+      height: 1px;
+      margin: 28px 0 10px;
+      background: linear-gradient(to right, transparent, rgba(255, 120, 158, 0.35), transparent);
+    }
+
+    @media (max-width: 930px) {
+      .grid, .two-col, .projects, .faq-grid, .role-columns, .roles-grid {
+        grid-template-columns: 1fr;
+      }
+      .hero-flex { flex-direction: column; }
+      .avatar { width: 82px; height: 82px; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="bgCanvas" aria-hidden="true"></canvas>
+  <div class="bg-glow" aria-hidden="true"></div>
+
+  <div class="wrap">
+    <nav class="top-nav">
+      <div class="pill">
+        <button type="button" class="active" data-tab="home">Home</button>
+        <button type="button" data-tab="projects">Projects</button>
+        <button type="button" data-tab="achievements">Achievements</button>
+        <button type="button" data-tab="roles">Roles</button>
+        <button type="button" data-tab="faq">FAQ</button>
+      </div>
+    </nav>
+
+    <div class="tab-panel active" id="tab-home">
+    <div class="grid" id="home">
+      <section class="card hero reveal">
+        <div class="hero-flex">
+          <img class="avatar" src="pfp.png" alt="ISekai profile picture" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-flex';" />
+          <div style="display:none;width:100px;height:100px;border-radius:20px;border:2px solid rgba(255,120,150,.45);background:linear-gradient(120deg,#ff5c86,#ff2e61);font-weight:900;align-items:center;justify-content:center;font-size:2rem;">I</div>
+          <div>
+            <span class="mini-kicker">Development And Coding</span>
+            <h1>ISekai</h1>
+            <p>Minecraft Skript/Plugin Developer</p>
+            <p style="margin-top:10px;">High experienced minecraft developer who makes minecraft plugins, mods, ccs, skript, discord bots both .js and .py.</p>
+            <div class="hero-actions">
+              <a class="btn" href="https://github.com/isekaiihu" target="_blank" rel="noreferrer">GitHub</a>
+              <a class="btn" href="https://discord.gg/staffunited" target="_blank" rel="noreferrer">Discord</a>
+              <button type="button" class="btn" data-scroll-target="contact-global">Hire Me</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="card info reveal">
+        <h3>Info</h3>
+        <div class="info-row">
+          <span class="key">Status</span>
+          <div class="value online"><span class="dot"></span>AVAILABLE</div>
+        </div>
+        <div class="info-row">
+          <span class="key">Identity</span>
+          <div class="value">akumasekai</div>
+        </div>
+      </aside>
+    </div>
+    </div>
+
+    <div class="tab-panel" id="tab-projects">
+    <section class="card reveal" id="projects">
+      <h2>Projects</h2>
+      <div class="roles-block">
+        <span class="label">Mods</span>
+        <div class="roles-grid">
+          <div class="role-item"><div class="role-badge">R</div><div><div class="role-main">ResourceDisabler</div><div class="role-sub">Mod</div></div></div>
+          <div class="role-item"><div class="role-badge">N</div><div><div class="role-main">NewParticlesArise</div><div class="role-sub">Mod</div></div></div>
+        </div>
+      </div>
+      <div class="roles-block">
+        <span class="label">Plugins</span>
+        <div class="roles-grid">
+          <div class="role-item"><div class="role-badge">P</div><div><div class="role-main">Paragon Anticheat</div><div class="role-sub">Plugin</div></div></div>
+          <div class="role-item"><div class="role-badge">A</div><div><div class="role-main">AutoWelcome</div><div class="role-sub">Plugin</div></div></div>
+          <div class="role-item"><div class="role-badge">S</div><div><div class="role-main">SpearCore</div><div class="role-sub">Plugin</div></div></div>
+          <div class="role-item"><div class="role-badge">D</div><div><div class="role-main">DiscordLink</div><div class="role-sub">Plugin</div></div></div>
+          <div class="role-item"><div class="role-badge">T</div><div><div class="role-main">TownyNationsCreator</div><div class="role-sub">Plugin</div></div></div>
+          <div class="role-item"><div class="role-badge">S</div><div><div class="role-main">SReports</div><div class="role-sub">Plugin</div></div></div>
+          <div class="role-item"><div class="role-badge">S</div><div><div class="role-main">SoulTierTagger</div><div class="role-sub">Plugin</div></div></div>
+          <div class="role-item"><div class="role-badge">P</div><div><div class="role-main">ProxyHubPlugin</div><div class="role-sub">Plugin</div></div></div>
+          <div class="role-item"><div class="role-badge">L</div><div><div class="role-main">LimboAuthReturns</div><div class="role-sub">Plugin</div></div></div>
+          <div class="role-item"><div class="role-badge">P</div><div><div class="role-main">PracticeCore</div><div class="role-sub">Plugin</div></div></div>
+          <div class="role-item"><div class="role-badge">R</div><div><div class="role-main">RtpPluginEarth</div><div class="role-sub">Plugin</div></div></div>
+          <div class="role-item"><div class="role-badge">S</div><div><div class="role-main">ScreensharePlugin</div><div class="role-sub">Plugin</div></div></div>
+          <div class="role-item"><div class="role-badge">M</div><div><div class="role-main">MsgPlugin</div><div class="role-sub">Plugin</div></div></div>
+          <div class="role-item"><div class="role-badge">L</div><div><div class="role-main">Lifesteal +</div><div class="role-sub">Plugin</div></div></div>
+          <div class="role-item"><div class="role-badge">L</div><div><div class="role-main">Lootboxes +</div><div class="role-sub">Plugin</div></div></div>
+          <div class="role-item"><div class="role-badge">N</div><div><div class="role-main">Nations +</div><div class="role-sub">Plugin</div></div></div>
+          <div class="role-item"><div class="role-badge">N</div><div><div class="role-main">Nametags +</div><div class="role-sub">Plugin</div></div></div>
+          <div class="role-item"><div class="role-badge">G</div><div><div class="role-main">GoLivePlugin</div><div class="role-sub">Plugin</div></div></div>
+          <div class="role-item"><div class="role-badge">I</div><div><div class="role-main">ItemRoot</div><div class="role-sub">Plugin</div></div></div>
+          <div class="role-item"><div class="role-badge">F</div><div><div class="role-main">FactoryTutorialPlugin</div><div class="role-sub">Plugin</div></div></div>
+          <div class="role-item"><div class="role-badge">G</div><div><div class="role-main">GeneratorsIndex</div><div class="role-sub">Plugin</div></div></div>
+          <div class="role-item"><div class="role-badge">C</div><div><div class="role-main">Coinflip +</div><div class="role-sub">Plugin</div></div></div>
+          <div class="role-item"><div class="role-badge">B</div><div><div class="role-main">Bouties +</div><div class="role-sub">Plugin</div></div></div>
+          <div class="role-item"><div class="role-badge">C</div><div><div class="role-main">Collectables</div><div class="role-sub">Plugin</div></div></div>
+          <div class="role-item"><div class="role-badge">A</div><div><div class="role-main">Arena Regen</div><div class="role-sub">Plugin</div></div></div>
+          <div class="role-item"><div class="role-badge">A</div><div><div class="role-main">Abyss</div><div class="role-sub">Plugin</div></div></div>
+          <div class="role-item"><div class="role-badge">D</div><div><div class="role-main">DiscordBotHost</div><div class="role-sub">Plugin</div></div></div>
+          <div class="role-item"><div class="role-badge">D</div><div><div class="role-main">DonutSettings</div><div class="role-sub">Plugin</div></div></div>
+          <div class="role-item"><div class="role-badge">E</div><div><div class="role-main">EnvoyParty</div><div class="role-sub">Plugin</div></div></div>
+          <div class="role-item"><div class="role-badge">S</div><div><div class="role-main">SekaiShop</div><div class="role-sub">Plugin</div></div></div>
+          <div class="role-item"><div class="role-badge">S</div><div><div class="role-main">StrealexVouchers</div><div class="role-sub">Plugin</div></div></div>
+          <div class="role-item"><div class="role-badge">B</div><div><div class="role-main">ByeBedrockify</div><div class="role-sub">Plugin</div></div></div>
+        </div>
+      </div>
+    </section>
+    </div>
+
+    <section class="card reveal">
+      <h2>Why Me?</h2>
+      <p style="line-height:1.8;color:#f6d4e1;">I am a 16 year old developer and a professional staff from Asia, I have started configuration in 2020, and learnt general development further in 2021, I have dedicated myself to mastering server development, management and secuirty.</p>
+      <p style="line-height:1.8;color:#f6d4e1;">What sets me apart: Unlike many developers who take weeks on simple plugins, i work very fast, I can complete simple projects within a day, and Core plugins takin months within a week. I always choose equality over equity.</p>
+    </section>
+
+    <div class="tab-panel" id="tab-achievements">
+    <h1 class="achievements-title reveal">ACHIEVEMENTS</h1>
+    <section class="card reveal achievement-card" id="achievements">
+      <div class="achieve-head">
+        <img class="star-icon" src="starfall.png" alt="StarfallMC icon" onerror="this.style.background='linear-gradient(120deg,#ff4a4a,#b90f0f)';this.style.objectFit='contain';" />
+        <div>
+          <h2>StarfallMC Dominance</h2>
+          <div style="color:#ffe698;font-size:1rem;font-weight:800;">Record Breaking Performance</div>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat">7+ Plugins Made</div>
+        <div class="stat">50+ Revisions Done</div>
+        <div class="stat">Fastest 1-2 Day Speeds</div>
+      </div>
+    </section>
+    </div>
+
+    <div class="tab-panel" id="tab-roles">
+    <section class="card reveal roles-block" id="roles">
+      <h2>Current Roles</h2>
+      <div class="roles-grid">
+        <div class="role-item"><div class="role-badge">S</div><div><div class="role-main">SoulStealerz</div><div class="role-sub">Owner</div></div></div>
+        <div class="role-item"><div class="role-badge">A</div><div><div class="role-main">Axiom Development</div><div class="role-sub">Developer</div></div></div>
+        <div class="role-item"><div class="role-badge">C</div><div><div class="role-main">ColdfireMC</div><div class="role-sub">Lead Developer</div></div></div>
+        <div class="role-item"><div class="role-badge">S</div><div><div class="role-main">Staff United</div><div class="role-sub">Owner</div></div></div>
+        <div class="role-item"><div class="role-badge">G</div><div><div class="role-main">GalaxyNetwork</div><div class="role-sub">SrMod</div></div></div>
+        <div class="role-item"><div class="role-badge">C</div><div><div class="role-main">Crystalia</div><div class="role-sub">Mod</div></div></div>
+      </div>
+    </section>
+    <section class="card reveal roles-block">
+      <h2>Career Path</h2>
+      <div class="roles-grid">
+        <div class="role-item"><div class="role-badge">S</div><div><div class="role-main">Spear SMP</div><div class="role-sub">Lead Developer</div></div></div>
+        <div class="role-item"><div class="role-badge">S</div><div><div class="role-main">StarfallMC</div><div class="role-sub">Developer</div></div></div>
+        <div class="role-item"><div class="role-badge">P</div><div><div class="role-main">PlayMantle</div><div class="role-sub">Developer</div></div></div>
+        <div class="role-item"><div class="role-badge">M</div><div><div class="role-main">McSim</div><div class="role-sub">Lead Developer</div></div></div>
+        <div class="role-item"><div class="role-badge">T</div><div><div class="role-main">TunaMC</div><div class="role-sub">Development Manager</div></div></div>
+        <div class="role-item"><div class="role-badge">P</div><div><div class="role-main">PhantomPvP</div><div class="role-sub">Developer</div></div></div>
+        <div class="role-item"><div class="role-badge">E</div><div><div class="role-main">EchoSMP</div><div class="role-sub">Developer</div></div></div>
+        <div class="role-item"><div class="role-badge">F</div><div><div class="role-main">FireSteal</div><div class="role-sub">Developer</div></div></div>
+        <div class="role-item"><div class="role-badge">B</div><div><div class="role-main">BananaMC</div><div class="role-sub">Developer</div></div></div>
+        <div class="role-item"><div class="role-badge">F</div><div><div class="role-main">FallenCloud</div><div class="role-sub">Developer</div></div></div>
+        <div class="role-item"><div class="role-badge">S</div><div><div class="role-main">SoulDuel</div><div class="role-sub">Executive</div></div></div>
+        <div class="role-item"><div class="role-badge">F</div><div><div class="role-main">Furious Studios</div><div class="role-sub">Head Mod</div></div></div>
+        <div class="role-item"><div class="role-badge">W</div><div><div class="role-main">WydLifesteal</div><div class="role-sub">Developer</div></div></div>
+        <div class="role-item"><div class="role-badge">T</div><div><div class="role-main">TrialSMP</div><div class="role-sub">Senior Admin</div></div></div>
+      </div>
+    </section>
+    </div>
+
+    <div class="tab-panel" id="tab-faq">
+    <section class="card reveal" id="faq">
+      <h2>Interview FAQ</h2>
+      <div class="faq-grid">
+        <div>
+          <span class="label">Why Should I Hire You?</span>
+          <p style="line-height:1.8;color:#f6d4e1;">I'm highly experienced and always looking for servers that i can do development work on, I do make mistakes but i try to learn from them. Im very active, i don't interract much with members unless they need me or there's a bug, I respond to staff and higher-ups mostly.</p>
+        </div>
+        <div>
+          <span class="label">Whats Your Ingame Name?</span>
+          <p style="line-height:1.8;color:#f6d4e1;">My Current IGN is Ascvnd</p>
+          <span class="label">How do you handle Staff Abuse?</span>
+          <p style="line-height:1.8;color:#f6d4e1;">As i said my main principle is equality over equity, i'll do everything to make it stop while I contact higher-ups.</p>
+        </div>
+      </div>
+      <div class="fade-line"></div>
+      <span class="label">Regarding Past Removals</span>
+      <p style="line-height:1.8;color:#f6d4e1;">I was removed from PlayMantle and McSim because i did a keyall on playmantle, and mcsim removed me because they thought i was using code from playmantle (Even though the gui playmantle made was in DeluxeMenus and i was making a plugin, and Even the owner and my Higher Up lead dev told me to copy this exact menu 1:1)</p>
+    </section>
+    </div>
+
+    <section class="card reveal" id="skills">
+      <h2>My Fav Stuff</h2>
+      <div class="two-col list">
+        <p><span class="label">Games</span>Minecraft, Roblox, GtaV Online, Valorant</p>
+        <p><span class="label">Music</span>Phonk, Pop</p>
+        <p><span class="label">Facts</span>Redstone Pro, Coder, Footbal Fan</p>
+        <div>
+          <span class="label">Core Skills</span>
+          <div class="chip-wrap">
+            <span class="chip">Skript</span>
+            <span class="chip">Java</span>
+            <span class="chip">Plugin Dev</span>
+            <span class="chip">Spigot</span>
+            <span class="chip">Paper</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card contact reveal" id="contact-global">
+      <h2>Ready to Start?</h2>
+      <p style="color:#f7c7d7;max-width:640px;margin:0 auto;">Available for Minecraft plugin development, Skript systems, and Discord bot engineering. Fast delivery, clean coding, and pro communication.</p>
+      <div class="socials">
+        <a class="btn" href="https://github.com/isekaiihu" target="_blank" rel="noreferrer">GitHub / isekaiihu</a>
+        <a class="btn" href="https://discord.gg/staffunited" target="_blank" rel="noreferrer">Discord Server</a>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // Reactive background with cracked red orb + particles
+    const canvas = document.getElementById('bgCanvas');
+    const ctx = canvas.getContext('2d');
+    const glow = document.querySelector('.bg-glow');
+    let w = 0, h = 0, mouseX = 0, mouseY = 0, t = 0;
+    const particles = Array.from({ length: 90 }, () => ({
+      x: Math.random(), y: Math.random(), r: Math.random() * 1.8 + 0.6, s: Math.random() * 0.00045 + 0.00015
+    }));
+
+    function resize() {
+      w = canvas.width = window.innerWidth * devicePixelRatio;
+      h = canvas.height = window.innerHeight * devicePixelRatio;
+      canvas.style.width = window.innerWidth + 'px';
+      canvas.style.height = window.innerHeight + 'px';
+      ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    window.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX / window.innerWidth;
+      mouseY = e.clientY / window.innerHeight;
+      glow.style.setProperty('--mx', (mouseX * 100).toFixed(2) + '%');
+      glow.style.setProperty('--my', (mouseY * 100).toFixed(2) + '%');
+    }, { passive: true });
+
+    function drawCrackedOrb(cx, cy, rad) {
+      const grd = ctx.createRadialGradient(cx - rad * 0.2, cy - rad * 0.3, rad * 0.1, cx, cy, rad);
+      grd.addColorStop(0, 'rgba(255,110,110,0.55)');
+      grd.addColorStop(0.3, 'rgba(255,65,65,0.32)');
+      grd.addColorStop(1, 'rgba(255,40,40,0.07)');
+      ctx.beginPath();
+      ctx.fillStyle = grd;
+      ctx.arc(cx, cy, rad, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = 'rgba(255,120,120,0.32)';
+      ctx.lineWidth = 1.2;
+      for (let i = 0; i < 16; i++) {
+        const a = (Math.PI * 2 / 16) * i + Math.sin(t * 0.0012 + i) * 0.05;
+        const len = rad * (0.22 + (i % 3) * 0.12);
+        ctx.beginPath();
+        ctx.moveTo(cx + Math.cos(a) * (rad * 0.1), cy + Math.sin(a) * (rad * 0.1));
+        ctx.lineTo(cx + Math.cos(a) * len, cy + Math.sin(a) * len);
+        ctx.stroke();
+      }
+    }
+
+    function animate() {
+      t += 16;
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      const cx = window.innerWidth * (0.73 + (mouseX - 0.5) * 0.05);
+      const cy = window.innerHeight * (0.18 + (mouseY - 0.5) * 0.04);
+      drawCrackedOrb(cx, cy, Math.min(window.innerWidth, window.innerHeight) * 0.24);
+
+      particles.forEach(p => {
+        p.y += p.s * (1.2 + mouseY);
+        p.x += Math.sin((t * 0.0005) + p.y * 8) * 0.00045;
+        if (p.y > 1.05) { p.y = -0.05; p.x = Math.random(); }
+        const x = p.x * window.innerWidth;
+        const y = p.y * window.innerHeight;
+        ctx.beginPath();
+        ctx.fillStyle = 'rgba(255, 90, 90, 0.22)';
+        ctx.arc(x, y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      requestAnimationFrame(animate);
+    }
+    animate();
+
+    const tabButtons = [...document.querySelectorAll('.pill button[data-tab]')];
+    const tabPanels = [...document.querySelectorAll('.tab-panel')];
+    function setTab(name) {
+      tabButtons.forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+      tabPanels.forEach(p => p.classList.toggle('active', p.id === `tab-${name}`));
+      document.querySelectorAll('.tab-panel.active .reveal, #skills.reveal, #contact-global.reveal').forEach(el => el.classList.add('show'));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    tabButtons.forEach(btn => btn.addEventListener('click', () => setTab(btn.dataset.tab)));
+    document.querySelectorAll('[data-scroll-target]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = document.getElementById(btn.getAttribute('data-scroll-target'));
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+
+    const reveal = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) entry.target.classList.add('show');
+      });
+    }, { threshold: 0.14 });
+    document.querySelectorAll('.reveal').forEach(el => reveal.observe(el));
+    setTab('home');
+  </script>
+</body>
+</html>
